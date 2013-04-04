@@ -20,7 +20,7 @@ def sendAction():
 	action = raw_input("  Which action:")
 	device = raw_input("  Which device type:")
 	address = raw_input("  IP/Hostname:")
-	print "Opening Pipe."
+	print "Opening Socket."
 	print "Sending Action."
 	print "Action Queued."
 
