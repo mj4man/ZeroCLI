@@ -67,13 +67,16 @@ class core():
 			return "No"
 
 	def recieveData(self,data):
-		tree = ET.fromstring(data)
-		for child in tree.findall("rpc"):
-			if child.get('callType') == 'hello':
-				ver = child.find('ver').text
-				returnValue = self.helloRcv(ver)
+		try:
+			tree = ET.fromstring(data)
+			for child in tree.findall("rpc"):
+				if child.get('callType') == 'hello':
+					ver = child.find('ver').text
+					returnValue = self.helloRcv(ver)
 				
-		return returnValue
+			return returnValue
+		except Exception, e:
+			return "<?xml version\"1.0\"?><zeroCli><error errorType=\"1\">%s</error></zeroCli>" % e
 		
 
 
