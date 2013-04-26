@@ -4,6 +4,8 @@ from multiprocessing import Process, Queue
 import threading
 import sys
 import atexit
+import xml.etree.ElementTree as ET
+
 
 class core():
 	def doAction(self,action,args):
@@ -58,6 +60,22 @@ class core():
 			process.terminate()
 		sys.exit()
 
+	def helloRcv(self,ver):
+		if ver == self.ver:
+			return "Yes"
+		else:
+			return "No"
+
+	def recieveData(self,data):
+		tree = ET.fromstring(data)
+		for child in tree.findall("rpc"):
+			if child.get('callType') == 'hello':
+				ver = child.find('ver').text
+				returnValue = self.helloRcv(ver)
+				
+		return returnValue
+		
+
 
 	def main(self,client):
 		size = 1024
@@ -68,13 +86,17 @@ class core():
 				print "Shut Down Client"
 				return
 			if hello == 0:
-				client.send("<zeroCli>\n <hello>\n  <type>server</type>\n  <ver>1.0</ver>\n  <capabilities>\n   <test ver=\"1.0\" />\n   <actions ver=\"1.0\">\n  </capabilities>\n </hello>\n</zeroCli>")
+				client.send("<?xml version=\"1.0\"?><zeroCli><rpc callType=\"hello\"><ver>%s</ver></rpc></zeroCli>"% self.ver)
 				hello = client.recv(size)
-				client.send("Welcome")
+				"""Parse Welcome Message"""
+				print hello
+				parseResponse = self.recieveData(hello)
+				client.send(parseResponse)
 				
 			data = client.recv(size)
 			if data:
-				client.send(data)
+				parseResponse = self.recieveData(data)
+				client.send(parseResponse)
 		client.close()
 		
 	def socketStart(self):
@@ -99,6 +121,7 @@ class core():
 	address = {}
 	exit = 0
 	i = 0
+	ver = "0.1"
 	port = 38500
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 	q = Queue()
