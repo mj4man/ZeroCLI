@@ -1,0 +1,4 @@
+- Make new class for CLI Interface; move it out of the server class
+- Make the CLI interface more scalable
+- Change to the serversocket module for the client/server connections
+- Add docstrings and comments
