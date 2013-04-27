@@ -1,8 +1,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import sys
-from server import server
+from core import server
 
 if __name__ == "__main__":
     """ When the module is called directly it's __name__ will equal the 
@@ -17,6 +16,7 @@ if __name__ == "__main__":
     #       different modules
 
     # Calling our main CLI interface
-    zeroCli = server
-    coreCli = zeroCli.cli_interface()
+    zeroCLI = server
+    server = zeroCLI.Server()
+    coreCli = server.cli_interface()
 
