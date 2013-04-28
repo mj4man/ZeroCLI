@@ -34,10 +34,10 @@ class Server(object):
         print ("Starting service. Listening on port {0}.".format(self._port))
         
         # Creating a thread to wait for a new client or interface to start
-        server = threading.Thread(target=self.__listen)
+        server = threading.Thread(target=self._listen)
         server.start()
     
-    def __clean(self):
+    def _clean(self):
         self._exit = 1
         timeout = 5
         try:
@@ -53,7 +53,7 @@ class Server(object):
             process.terminate()
         sys.exit()
     
-    def __listen(self):
+    def _listen(self):
         """ Listens for new client, then starts a new process """
         try:
             server_socket = socket.socket()
@@ -61,7 +61,7 @@ class Server(object):
             server_socket.listen(5)
         except:
             print ("\nError binding server to port. Quiting...")
-            self.__clean()
+            self._clean()
         i = 0 
         while True:
             if self._exit == 1:
@@ -71,7 +71,7 @@ class Server(object):
             else:
                 # Creates a dict of {CLIENT: (<socket._socketobject at 0x1098900c0>, ('127.0.0.1', 53891))}
                 self._clients[i], self._addresses[i] = server_socket.accept()
-                self._socketProcess[i] = Process(target=self.__main, args = (self._clients[i],))
+                self._socketProcess[i] = Process(target=self._main, args = (self._clients[i],))
                 self._socketProcess[i].start()
                 i += 1    
 
@@ -96,9 +96,9 @@ class Server(object):
                     print (command['output'])
                     if command['action'] is not 0:
                         #print ("Do action %i" %command['action'])
-                        self.__do_action(command['action'],command['args'])
+                        self._do_action(command['action'],command['args'])
 
-    def __do_action(self, action, args):
+    def _do_action(self, action, args):
         """
         Does some type of action
         
@@ -113,7 +113,7 @@ class Server(object):
             for client in self._clients.values():
                 client.close()
             print ("Closing down all services.")
-            self.__clean()
+            self._clean()
         elif action == 3:
             for addr in self._addresses.values():
                 print (addr)
@@ -138,7 +138,7 @@ class Server(object):
         
 
 
-    def __main(self, client):
+    def _main(self, client):
         size = 1024
         hello = 0
         while True:
