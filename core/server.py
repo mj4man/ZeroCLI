@@ -5,7 +5,6 @@ import time
 import socket
 import threading
 import sys
-import atexit
 import xml.etree.ElementTree as ET
 from multiprocessing import Process, Queue
 
@@ -18,6 +17,7 @@ class Server(object):
         
         self._exit = 0
         self._clients = {}
+        self._addresses= {}
         self._socketProcess = {}
         self._version = "0.1"
         self._port = 38500
@@ -30,7 +30,6 @@ class Server(object):
         self.queue = Queue()
         
         # When `sys.exit` is called clean() will be called
-        atexit.register(self.__clean)
         
         print ("Starting service. Listening on port {0}.".format(self._port))
         
@@ -41,33 +40,38 @@ class Server(object):
     def __clean(self):
         self._exit = 1
         timeout = 5
-        client_socket = socket.socket()
-        client_socket.connect(('localhost', self._port))
-        time.sleep(1)
-        client_socket.close()
+        try:
+            client_socket = socket.socket()
+            client_socket.connect(('localhost', self._port))
+            time.sleep(1)
+            client_socket.close()
+        except:
+            print("Couldn't connect to server")
         print ("Waiting for timeout")
         time.sleep(timeout)
-        for process in self.socketProcess.values():
+        for process in self._socketProcess.values():
             process.terminate()
         sys.exit()
     
     def __listen(self):
         """ Listens for new client, then starts a new process """
-        hostname = socket.gethostname()
-        print (hostname)
-        server_socket = socket.socket()
-        server_socket.bind(('', self._port))
-        server_socket.listen(5)
-
+        try:
+            server_socket = socket.socket()
+            server_socket.bind(('', self._port))
+            server_socket.listen(5)
+        except:
+            print ("\nError binding server to port. Quiting...")
+            self.__clean()
         i = 0 
         while True:
             if self._exit == 1:
                 print("Main Socket Listener Shutdown.")
+                server_socket.close()
                 break
             else:
                 # Creates a dict of {CLIENT: (<socket._socketobject at 0x1098900c0>, ('127.0.0.1', 53891))}
                 self._clients[i], self._addresses[i] = server_socket.accept()
-                self._socketProcess[i] = Process(target=self.__main, args = (self._clients[i][0]))
+                self._socketProcess[i] = Process(target=self.__main, args = (self._clients[i],))
                 self._socketProcess[i].start()
                 i += 1    
 
@@ -90,8 +94,9 @@ class Server(object):
             for command in self._commands:
                 if user_cmd == command['input']:
                     print (command['output'])
-                if command['action'] is not 0:
-                    self.__do_action(command['action'],command['args'])
+                    if command['action'] is not 0:
+                        #print ("Do action %i" %command['action'])
+                        self.__do_action(command['action'],command['args'])
 
     def __do_action(self, action, args):
         """
@@ -102,20 +107,19 @@ class Server(object):
         args -- arguments associated with command; see commands list
         
         """
-        
         if action == 1:
             for cmd in self._commands: print (cmd['input'])
         elif action == 2:
-            for client in self._clients.sitervalues():
-                client[0].close()
+            for client in self._clients.values():
+                client.close()
             print ("Closing down all services.")
-            self.clean()
+            self.__clean()
         elif action == 3:
-            for addr in self._address.itervalues():
-                print (addr[1])
+            for addr in self._addresses.values():
+                print (addr)
 
-    def helloRcv(self,ver):
-        if ver == self.ver:
+    def helloRcv(self,thisVer):
+        if thisVer == self._version:
             return "Yes"
         else:
             return "No"
@@ -134,7 +138,7 @@ class Server(object):
         
 
 
-    def main(self, client):
+    def __main(self, client):
         size = 1024
         hello = 0
         while True:
@@ -142,10 +146,9 @@ class Server(object):
                 print ("Shut Down Client")
                 break
             if hello == 0:
-                client.send("<?xml version=\"1.0\"?><zeroCli><rpc callType=\"hello\"><ver>%s</ver></rpc></zeroCli>"% self.ver)
+                client.send("<?xml version=\"1.0\"?><zeroCli><rpc callType=\"hello\"><ver>%s</ver></rpc></zeroCli>"% self._version)
                 hello = client.recv(size)
                 """Parse Welcome Message"""
-                print (hello)
                 parseResponse = self.recieveData(hello)
                 client.send(parseResponse)
                 
