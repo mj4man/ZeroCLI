@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-from core import server
+from core import server, cli
 
 if __name__ == "__main__":
     """ When the module is called directly it's __name__ will equal the 
@@ -12,11 +12,39 @@ if __name__ == "__main__":
         modules should be called from here. 
 
     """
-    # TODO: Start scripting out the main program here. Calling individual functions from your
+    #     ODO: Start scripting out the main program here. Calling individual functions from your
     #       different modules
 
-    # Calling our main CLI interface
-    zeroCLI = server
-    server = zeroCLI.Server()
-    coreCli = server.cli_interface()
+    def do_action(action, args):
+        """
+        Does some type of action
+        
+        Keyword Arguments:
+        action -- action associated with command; see commands list
+        args -- arguments associated with command; see commands list
+        
+        """
+        if action == "help":
+            for cmd in commands: print (cmd['input'])
 
+        elif action == "exit":
+            server.clean()
+            coreCli.clean()
+            print("Press RETURN to exit.")
+
+        elif action == "clients":
+            for addr in server.addresses.values():
+                print (addr)
+
+    # Setting variables used by objects.
+    commands = [
+        {"input": "help", "args": 0},
+        {"input": "exit", "args": 0},
+        {"input": "clients", "args": 0},
+    ]
+    port = 38500
+    version = "0.1"
+
+    #Set up objects for server and CLI.
+    server = server.Server(version,port)
+    coreCli = cli.coreCLI(commands, do_action)
