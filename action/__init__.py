@@ -1,3 +1,3 @@
 class device:
-	def hostname(self,hostname):
-		self.hostname = hostname
+		setHostName = True
+        getHostName = True
