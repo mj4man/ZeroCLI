@@ -22,8 +22,6 @@ class Server(object):
         self._port = port
         self.queue = Queue()
         
-        # When `sys.exit` is called clean() will be called
-        
         print ("Starting service. Listening on port {0}.".format(self._port))
         
         # Creating a thread to wait for a new client or interface to start
@@ -31,6 +29,7 @@ class Server(object):
         server.start()
     
     def clean(self):
+        # Cleanup function. Called by main.py when ready to exit.
         self._exit = 1
         timeout = 5
         for client in self._clients.values():
@@ -53,7 +52,7 @@ class Server(object):
             server_socket.bind(('', self._port))
             server_socket.listen(5)
         except:
-            print ("\nError binding server to port. Quiting...")
+            print ("\nError binding server to port. Server dying. Type 'exit' to quit...")
             self.clean()
         i = 0 
         while True:
@@ -62,23 +61,27 @@ class Server(object):
                 server_socket.close()
                 break
             else:
-                # Creates a dict of {CLIEN    : (<socket._socketobject at 0x1098900c0>, ('127.0.0.1', 53891))}
                 self._clients[i], self.addresses[i] = server_socket.accept()
-                self._socketProcess[i] = Process(target=self._main, args = (self._clients[i],))
+                self._socketProcess[i] = Process(target=self._clientHandle, args = (self._clients[i],))
                 self._socketProcess[i].start()
                 i += 1    
 
     def helloRcv(self,thisVer):
+        # Place holder for future hello check and return.
         if thisVer == self._version:
             return "Yes"
         else:
             return "No"
 
     def recieveData(self,data):
+        """
+        Recieve data from client and parce the response. This function contains all the actions for RPC calls.
+        """
         try:
             tree = E    .fromstring(data)
             for child in tree.findall("rpc"):
                 if child.get('callType') == 'hello':
+                    # Handle hello from Client and establish connection.
                     ver = child.find('ver').text
                     returnValue = self.helloRcv(ver)
                 
@@ -88,7 +91,10 @@ class Server(object):
         
 
 
-    def _main(self, client):
+    def _clientHandle(self, client):
+        """
+        This functon handles the client's communication. Recieves XML and sends to parcer. Sends return XML.
+        """
         size = 1024
         hello = 0
         while True:
