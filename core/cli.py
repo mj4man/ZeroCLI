@@ -5,13 +5,14 @@ from __future__ import absolute_import
 class coreCLI(object):
     """ Interface for interactive server use. """
     
-    def __init__(self, commands, do_action):
+    def __init__(self, commands, do_cli_action):
         """ Kickstart the processes """
         self._exit = 0
         self._commands = commands
-        self.cli_interface(do_action)
+        self.do_cli_action = do_cli_action
+        self.cli_interface()
 
-    def cli_interface(self, do_action):
+    def cli_interface(self):
         """ The main CLI interface """
 
         def format_command(cmd):
@@ -29,6 +30,6 @@ class coreCLI(object):
             
             for command in self._commands:
                 if user_cmd == command['input']:
-                    do_action(command['input'],command['args'])
+                    self.do_cli_action(command['input'],command['args'])
     def clean(self):
         self._exit = 0
