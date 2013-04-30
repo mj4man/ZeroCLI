@@ -1,4 +1,4 @@
 - Change to the serversocket module for the client/server connections
 - Add docstrings and comments (Mostly done now)
-- Finalize data structure of actions
-- Begin work on device drivers/interpreters
+- Finalize data structure of actions (Started)
+- Begin work on device drivers/interpreters (Started)
