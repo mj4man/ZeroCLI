@@ -5,7 +5,7 @@ This interpreter converts actions into IOS commands and sends result to device d
 
 """
 import string
-from action.network.router.cisco import cisco
+from action.network.router.cisco.cisco import cisco
 
 class ciscoIOS(cisco):
     def __init__(self):
