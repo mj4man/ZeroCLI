@@ -5,5 +5,5 @@ class cisco(router):
         router.__init__(self)
         self.action = self.action + (
                 ['EIGRPNetwork','Add EIGRP network statement.', 'NETWORK', 'MASK'],
-                ['EIGRPAuto_Summary','Enable or disable EIGRP auto-summary.', 'BOOL']
+                ['EIGRPAutoSummary','Enable or disable EIGRP auto-summary.', 'BOOL']
         )
