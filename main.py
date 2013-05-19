@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
-
-from core import server, cli, device, action
+from core import server, cli
+from device import device
 
 if __name__ == "__main__":
     """ When the module is called directly it's __name__ will equal the 
@@ -14,7 +14,8 @@ if __name__ == "__main__":
     """
     #     ODO: Start scripting out the main program here. Calling individual functions from your
     #       different modules
-
+    def send_dev_action(device,action,authType,auth):
+        device.sendCommand(addr,action,authType,auth)
     def do_cli_action(action, args):
         """
         Does some type of action
@@ -46,9 +47,9 @@ if __name__ == "__main__":
     version = "0.1"
 
     # Set up objects.
-    # Server Object handles communication between Interface and Core.
-    server = server.Server(version,port)
     # Device object handles communication between device drivers and Core.
-    device = device.Device()
+    device = device.device
+    # Server Object handles communication between Interface and Core.
+    server = server.Server(version,port,device,send_dev_action)
     # CoreCLI is responsible for user input to the server.
     coreCli = cli.coreCLI(commands, do_cli_action)

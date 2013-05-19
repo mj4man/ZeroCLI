@@ -4,14 +4,14 @@ from __future__ import absolute_import
 import socket
 import threading
 import sys
-import xml.etree.ElementTree as E    
+import xml.etree.ElementTree as ET    
 from multiprocessing import Process, Queue
 
 
 class Server(object):
     """ Orchestrates communication between all zeroCLI components """
     
-    def __init__(self,version,port):
+    def __init__(self,version,port,device,send_dev_action):
         """ Define variables and kickstart the processes """
         
         self._exit = 0
@@ -21,7 +21,7 @@ class Server(object):
         self._version = version
         self._port = port
         self.queue = Queue()
-        
+        self.send_dev_action = send_dev_action
         print ("Starting service. Listening on port {0}.".format(self._port))
         
         # Creating a thread to wait for a new client or interface to start
@@ -78,13 +78,17 @@ class Server(object):
         Recieve data from client and parce the response. This function contains all the actions for RPC calls.
         """
         try:
-            tree = E    .fromstring(data)
+            tree = ET.fromstring(data)
             for child in tree.findall("rpc"):
                 if child.get('callType') == 'hello':
                     # Handle hello from Client and establish connection.
                     ver = child.find('ver').text
                     returnValue = self.helloRcv(ver)
-                
+                if child.get('callType') == "sendAction":
+                    deviceType = child.find('device').text
+                    vendor = child.find('vendor').text
+                    device = self.device[vendor][deviceType]
+
             return returnValue
         except Exception, e:
             return "<?xml version\"1.0\"?><zeroCli><error errorType=\"1\">%s</error></zeroCli>" % e
