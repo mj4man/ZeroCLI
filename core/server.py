@@ -95,9 +95,9 @@ class Server(object):
                     auth = [child.find('username').text,child.find('password').text]
                     result = self.send_dev_action(addr,device,action,authType,auth)
                     if result[0] == 0:
-                        returnValue = "<?xml version\"1.0\"?><zeroCli><return>%s</return></zeroCli>" %result
+                        returnValue = "<?xml version\"1.0\"?><zeroCli><return>%s</return></zeroCli>" %result[1]
                     elif result[0] == 1:
-                        returnValue = "<?xml version\"1.0\"?><zeroCli><error errorType=\"2\">%s</error></zeroCli>" %result
+                        returnValue = "<?xml version\"1.0\"?><zeroCli><error errorType=\"2\">%s</error></zeroCli>" %result[1]
             return returnValue
         except Exception, e:
             return "<?xml version\"1.0\"?><zeroCli><error errorType=\"1\">%s</error></zeroCli>" % e

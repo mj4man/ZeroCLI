@@ -3,7 +3,7 @@
 Expect Device Driver for Cisco 3560.
 
 """
-
+import pexpect
 from interpreter.ciscoIOS import ciscoIOS
 
 class cat3560(ciscoIOS):
@@ -17,12 +17,19 @@ class cat3560(ciscoIOS):
         self.authMethod = "userpass"
         self.capabilities = self.action
 
-    def sendCommand(self,host,action,authtype,auth):
+    def sendCommand(self,addr,action,authtype,auth):
         # Filler for command send.
         command = self.convertAction(action)
         try:
-            #Filler for connecting to device.
-            filler = 0
+            session = pexpect.spawn("telnet %s"%addr, timeout=20)
+            session.expect(":")
+            session.sendline(auth[0])
+            session.expect(":")
+            session.sendline(auth[1])
+            session.expect("#")
+            session.sendline(action)
+            output = session.expect("#")
+            otype = 0
         except:
             otype = 1
             output = "Error contacting device."
