@@ -14,8 +14,8 @@ if __name__ == "__main__":
     """
     #     ODO: Start scripting out the main program here. Calling individual functions from your
     #       different modules
-    def send_dev_action(device,action,authType,auth):
-        device.sendCommand(addr,action,authType,auth)
+    def send_dev_action(addr,device,action,authType,auth):
+        return device.sendCommand(addr,action,authType,auth)
     def do_cli_action(action, args):
         """
         Does some type of action

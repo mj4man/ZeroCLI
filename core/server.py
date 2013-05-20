@@ -22,6 +22,7 @@ class Server(object):
         self._port = port
         self.queue = Queue()
         self.send_dev_action = send_dev_action
+        self.device = device
         print ("Starting service. Listening on port {0}.".format(self._port))
         
         # Creating a thread to wait for a new client or interface to start
@@ -88,7 +89,15 @@ class Server(object):
                     deviceType = child.find('device').text
                     vendor = child.find('vendor').text
                     device = self.device[vendor][deviceType]
-
+                    action = child.find('action').text
+                    authType = child.find('authType').text
+                    addr = child.find('addr').text
+                    auth = [child.find('username').text,child.find('password').text]
+                    result = self.send_dev_action(addr,device,action,authType,auth)
+                    if result[0] == 0:
+                        returnValue = "<?xml version\"1.0\"?><zeroCli><return>%s</return></zeroCli>" %result
+                    elif result[0] == 1:
+                        returnValue = "<?xml version\"1.0\"?><zeroCli><error errorType=\"2\">%s</error></zeroCli>" %result
             return returnValue
         except Exception, e:
             return "<?xml version\"1.0\"?><zeroCli><error errorType=\"1\">%s</error></zeroCli>" % e

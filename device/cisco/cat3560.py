@@ -20,5 +20,10 @@ class cat3560(ciscoIOS):
     def sendCommand(self,host,action,authtype,auth):
         # Filler for command send.
         command = self.convertAction(action)
-        print command
-        print "Logging in using %s. Credentials are:\n  Username: %s\n  Password: %s" %(authtype,auth[0],auth[1])
+        try:
+            #Filler for connecting to device.
+            filler = 0
+        except:
+            otype = 1
+            output = "Error contacting device."
+        return [otype,output]
