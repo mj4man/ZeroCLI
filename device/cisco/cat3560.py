@@ -26,9 +26,11 @@ class cat3560(ciscoIOS):
             session.sendline(auth[0])
             session.expect(":")
             session.sendline(auth[1])
-            session.expect("#")
-            session.sendline(action)
-            output = session.expect("#")
+            session.expect('([a-zA-Z0-9])*(#)')
+            session.sendline(command)
+            session.expect('([a-zA-Z0-9])*(#)')
+            output = session.before
+            output = output.replace(command,'',1)
             otype = 0
         except:
             otype = 1
