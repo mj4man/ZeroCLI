@@ -34,11 +34,13 @@ class Server(object):
         self._exit = 1
         timeout = 5
         for client in self._clients.values():
+            client.shutdown(2)
             client.close()
         try:
             client_socket = socket.socket()
             client_socket.connect(('localhost', self._port))
             time.sleep(1)
+            client_socket.shutdown(2)
             client_socket.close()
         except:
             print("Couldn't connect to server")
@@ -68,24 +70,34 @@ class Server(object):
                 i += 1    
 
     def helloRcv(self,thisVer):
-        # Place holder for future hello check and return.
+        # Do hello
         if thisVer == self._version:
-            return "Yes"
+            return [1, "Yes"]
         else:
-            return "No"
+            return [0, "No"]
 
-    def recieveData(self,data):
+    def recieveData(self,data,hello):
         """
         Recieve data from client and parce the response. This function contains all the actions for RPC calls.
         """
         try:
             tree = ET.fromstring(data)
             for child in tree.findall("rpc"):
-                if child.get('callType') == 'hello':
+                if child.get('callType') == 'hello' and hello == 0:
                     # Handle hello from Client and establish connection.
                     ver = child.find('ver').text
-                    returnValue = self.helloRcv(ver)
+                    return self.helloRcv(ver)
+                if hello != 1:
+                    return "<?xml version\"1.0\"?><zeroCli><error errorType=\"2\">Session not established.</error></zeroCli>"
+                exitSession = 0
+                if child.get('callType') == "exit":
+                    exitSession = 1
+                    returnValue = "<?xml version\"1.0\"?><zeroCli><rpc callType=\"exitAck\">Bye</rpc></zeroCli>"
                 if child.get('callType') == "sendAction":
+                    """
+                    Send action takes the different variables needed to send an action to a device and calls
+                    the device driver to complete the selected action.
+                    """
                     deviceType = child.find('device').text
                     vendor = child.find('vendor').text
                     device = self.device[vendor][deviceType]
@@ -93,14 +105,17 @@ class Server(object):
                     authType = child.find('authType').text
                     addr = child.find('addr').text
                     auth = [child.find('username').text,child.find('password').text]
+                    #Send variables to sevice action handler. Wait for result.
                     result = self.send_dev_action(addr,device,action,authType,auth)
                     if result[0] == 0:
+                        #If result is valid send back the response.
                         returnValue = "<?xml version\"1.0\"?><zeroCli><return>%s</return></zeroCli>" %result[1]
                     elif result[0] == 1:
+                        #If result was error in connectivity send back the error.
                         returnValue = "<?xml version\"1.0\"?><zeroCli><error errorType=\"2\">%s</error></zeroCli>" %result[1]
-            return returnValue
+            return exitSession,returnValue
         except Exception, e:
-            return "<?xml version\"1.0\"?><zeroCli><error errorType=\"1\">%s</error></zeroCli>" % e
+            return 0,"<?xml version\"1.0\"?><zeroCli><error errorType=\"1\">%s</error></zeroCli>" % e
         
 
 
@@ -116,13 +131,18 @@ class Server(object):
                 break
             if hello == 0:
                 client.send("<?xml version=\"1.0\"?><zeroCli><rpc callType=\"hello\"><ver>%s</ver></rpc></zeroCli>"% self._version)
-                hello = client.recv(size)
+                hellomsg = client.recv(size)
                 """Parse Welcome Message"""
-                parseResponse = self.recieveData(hello)
-                client.send(parseResponse)
-                
-            data = client.recv(size)
-            if data:
-                parseResponse = self.recieveData(data)
-                client.send(parseResponse)
+                parseResponse = self.recieveData(hellomsg, hello)
+                client.send(parseResponse[1])
+                hello = parseResponse[0]
+                print("Set hello to:%i" %parseResponse[0])
+            else:
+                data = client.recv(size)
+                if data:
+                    parseResponse = self.recieveData(data,hello)
+                    client.send(parseResponse[1])
+                    if parseResponse[0] == 1:
+                        break
+        client.shutdown(2)
         client.close()
