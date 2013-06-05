@@ -1,4 +1,6 @@
 - Change to the serversocket module for the client/server connections
-- Add docstrings and comments (Mostly done now)
-- Begin work on device drivers/interpreters (Started)
+- Encrypt client/server communication
+- Add docstrings and comments
+- Clean up code
+- Add actions and extend interpreters for new actions. <- Need help! Lot of work.
 - Start documentation/README. Create WIKI.
