@@ -73,9 +73,9 @@ class Server(object):
     def helloRcv(self,thisVer):
         # Do hello
         if thisVer == self._version:
-            return [1, "Yes"]
+            return [1, "<?xml version=\"1.0\"><zeroCli><rpc callType=\"helloRCV\">Welcome</rpc></zeroCli>"]
         else:
-            return [0, "No"]
+            return [0, "<?xml version=\"1.0\"><zeroCli><error errorType=\"2\">Session Not Established.</errorType></zeroCli>"]
 
     def recieveData(self,data,hello):
         """
@@ -89,7 +89,7 @@ class Server(object):
                     ver = child.find('ver').text
                     return self.helloRcv(ver)
                 if hello != 1:
-                    return "<?xml version=\"1.0\"?><zeroCli><error errorType=\"2\">Session not established.</error></zeroCli>"
+                    return 0,"<?xml version=\"1.0\"?><zeroCli><error errorType=\"2\">Session not established.</error></zeroCli>"
                 exitSession = 0
                 if child.get('callType') == "exit":
                     exitSession = 1
@@ -140,7 +140,7 @@ class Server(object):
             else:
                 data = client.recv(size)
                 if data:
-                    parseResponse = self.recieveData(data,hello)
+                    parseResponse = self.recieveData(data, hello)
                     client.send(parseResponse[1])
                     if parseResponse[0] == 1:
                         break
