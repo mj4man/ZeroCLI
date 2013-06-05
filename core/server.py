@@ -34,18 +34,19 @@ class Server(object):
         self._exit = 1
         timeout = 5
         for client in self._clients.values():
-            client.shutdown(2)
             client.close()
         try:
             client_socket = socket.socket()
             client_socket.connect(('localhost', self._port))
             time.sleep(1)
-            client_socket.shutdown(2)
             client_socket.close()
         except:
             print("Couldn't connect to server")
-        for process in self._socketProcess.values():
-            process.terminate()
+        try:
+            for process in self._socketProcess.values():
+                process.terminate()
+        except:
+            print("Server was dead.")
         sys.exit()
     
     def _listen(self):
@@ -60,7 +61,7 @@ class Server(object):
         i = 0 
         while True:
             if self._exit == 1:
-                print("Main Socket Listener Shutdown.")
+                print("Main Socket Listener Shutdown.\n")
                 server_socket.close()
                 break
             else:
@@ -88,11 +89,11 @@ class Server(object):
                     ver = child.find('ver').text
                     return self.helloRcv(ver)
                 if hello != 1:
-                    return "<?xml version\"1.0\"?><zeroCli><error errorType=\"2\">Session not established.</error></zeroCli>"
+                    return "<?xml version=\"1.0\"?><zeroCli><error errorType=\"2\">Session not established.</error></zeroCli>"
                 exitSession = 0
                 if child.get('callType') == "exit":
                     exitSession = 1
-                    returnValue = "<?xml version\"1.0\"?><zeroCli><rpc callType=\"exitAck\">Bye</rpc></zeroCli>"
+                    returnValue = "<?xml version=\"1.0\"?><zeroCli><rpc callType=\"exitAck\">Bye</rpc></zeroCli>"
                 if child.get('callType') == "sendAction":
                     """
                     Send action takes the different variables needed to send an action to a device and calls
@@ -109,13 +110,13 @@ class Server(object):
                     result = self.send_dev_action(addr,device,action,authType,auth)
                     if result[0] == 0:
                         #If result is valid send back the response.
-                        returnValue = "<?xml version\"1.0\"?><zeroCli><return>%s</return></zeroCli>" %result[1]
+                        returnValue = "<?xml version=\"1.0\"?><zeroCli><return>%s</return></zeroCli>" %result[1].strip()
                     elif result[0] == 1:
                         #If result was error in connectivity send back the error.
-                        returnValue = "<?xml version\"1.0\"?><zeroCli><error errorType=\"2\">%s</error></zeroCli>" %result[1]
+                        returnValue = "<?xml version=\"1.0\"?><zeroCli><error errorType=\"2\">%s</error></zeroCli>" %result[1]
             return exitSession,returnValue
         except Exception, e:
-            return 0,"<?xml version\"1.0\"?><zeroCli><error errorType=\"1\">%s</error></zeroCli>" % e
+            return 0,"<?xml version=\"1.0\"?><zeroCli><error errorType=\"1\">%s</error></zeroCli>" % e
         
 
 
@@ -136,7 +137,6 @@ class Server(object):
                 parseResponse = self.recieveData(hellomsg, hello)
                 client.send(parseResponse[1])
                 hello = parseResponse[0]
-                print("Set hello to:%i" %parseResponse[0])
             else:
                 data = client.recv(size)
                 if data:
@@ -144,5 +144,7 @@ class Server(object):
                     client.send(parseResponse[1])
                     if parseResponse[0] == 1:
                         break
-        client.shutdown(2)
-        client.close()
+        try:
+            client.close()
+        except:
+            print("Couldn't Close Client")
